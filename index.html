@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GeNew</title>
+<meta name="theme-color" content="#12130f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GeNew">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2312130f'/%3E%3Ctext x='50' y='68' font-size='58' font-family='monospace' font-weight='700' fill='%23c4f000' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2312130f'/%3E%3Ctext x='50' y='68' font-size='58' font-family='monospace' font-weight='700' fill='%23c4f000' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E">
+<link rel="manifest" id="manifestLink">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@400;600;700&display=swap');
+
+  :root{
+    --bg: #12130f;
+    --bg-panel: #191a14;
+    --bg-editor: #0d0e0a;
+    --line: #2a2c22;
+    --ink: #e8e6d9;
+    --ink-dim: #8c8f79;
+    --lime: #c4f000;
+    --lime-dim: #7f9c1a;
+    --amber: #ffb454;
+    --red: #ff6b5e;
+    --mono: 'Space Mono', ui-monospace, monospace;
+    --sans: 'Sora', ui-sans-serif, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);height:100%;}
+  body{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(196,240,0,0.05) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+
+  header{
+    padding:20px 28px 16px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+    border-bottom:1px solid var(--line);
+  }
+  .wordmark{
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:22px;
+    letter-spacing:0.5px;
+    color:var(--ink);
+  }
+  .wordmark span{color:var(--lime);}
+  .tag{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink-dim);
+  }
+
+  main{
+    flex:1;
+    display:grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap:1px;
+    background:var(--line);
+    min-height:0;
+  }
+  @media (max-width: 860px){
+    main{grid-template-columns:1fr; grid-template-rows:1fr 1fr;}
+  }
+
+  .pane{
+    background:var(--bg-panel);
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  .pane-head{
+    padding:10px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:1px solid var(--line);
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink-dim);
+  }
+  .pane-head .filename{color:var(--amber);}
+
+  .btnrow{display:flex; gap:8px; align-items:center;}
+  button{
+    font-family:var(--mono);
+    font-size:12px;
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--line);
+    padding:6px 12px;
+    cursor:pointer;
+    border-radius:2px;
+    transition:border-color .15s, color .15s;
+  }
+  button:hover{border-color:var(--lime-dim); color:var(--lime);}
+  button.primary{
+    background:var(--lime);
+    color:#0d0e0a;
+    border-color:var(--lime);
+    font-weight:700;
+  }
+  button.primary:hover{background:#d8ff33; color:#0d0e0a;}
+  input[type=file]{display:none;}
+
+  textarea#editor{
+    flex:1;
+    resize:none;
+    border:none;
+    outline:none;
+    background:var(--bg-editor);
+    color:var(--ink);
+    font-family:var(--mono);
+    font-size:14px;
+    line-height:1.6;
+    padding:16px 18px;
+    tab-size:4;
+    white-space:pre;
+  }
+  textarea#editor::placeholder{color:var(--ink-dim);}
+
+  #console{
+    flex:1;
+    overflow-y:auto;
+    padding:16px 18px;
+    font-family:var(--mono);
+    font-size:13.5px;
+    line-height:1.65;
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  #console .line{margin-bottom:2px;}
+  #console .out{color:var(--ink);}
+  #console .err{color:var(--red);}
+  #console .sys{color:var(--ink-dim);}
+  #console .ok{color:var(--lime);}
+  #console:empty::before{
+    content:"output waits here.";
+    color:var(--ink-dim);
+  }
+
+  footer{
+    border-top:1px solid var(--line);
+    padding:10px 28px;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-dim);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  footer a{color:var(--ink-dim);}
+  .dot{color:var(--lime); margin:0 6px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">Ge<span>New</span></div>
+  <div class="btnrow">
+    <span class="tag" id="installTag">a language for people who say "when" instead of "if" — .gnw files welcome</span>
+    <button id="installBtn" style="display:none;">install app ▾</button>
+  </div>
+</header>
+
+<main>
+  <section class="pane">
+    <div class="pane-head">
+      <span class="filename" id="fname">untitled.gnw</span>
+      <div class="btnrow">
+        <button id="loadBtn">open .gnw</button>
+        <input type="file" id="fileInput" accept=".gnw,.txt">
+        <button id="saveBtn">save .gnw</button>
+        <button class="primary" id="runBtn">run ▸</button>
+      </div>
+    </div>
+    <textarea id="editor" spellcheck="false"></textarea>
+  </section>
+
+  <section class="pane">
+    <div class="pane-head">
+      <span>output</span>
+      <button id="clearBtn">clear</button>
+    </div>
+    <div id="console"></div>
+  </section>
+</main>
+
+<footer>
+  <div>write <span class="dot">·</span> when / do / end <span class="dot">·</span> for every step(n) <span class="dot">·</span> define / return <span class="dot">·</span> [arrays] <span class="dot">·</span> %NOTE%</div>
+  <div>GeNew v1</div>
+</footer>
+
+<script>
+/* =========================================================
+   GeNew — lexer, parser, interpreter
+   ========================================================= */
+
+const KEYWORDS = new Set([
+  "when","do","end","for","every","step","define","write",
+  "is","AND","OR","stop","return"
+]);
+
+/* ---------------- LEXER ---------------- */
+function lex(source){
+  const tokens = [];
+  let i = 0;
+  const n = source.length;
+  let line = 1;
+
+  function peek(o=0){ return source[i+o]; }
+  function isDigit(c){ return c >= '0' && c <= '9'; }
+  function isAlpha(c){ return c && /[A-Za-z_]/.test(c); }
+  function isAlnum(c){ return c && /[A-Za-z0-9_]/.test(c); }
+
+  while (i < n) {
+    let c = source[i];
+
+    if (c === '\n') { line++; i++; continue; }
+    if (c === ' ' || c === '\t' || c === '\r') { i++; continue; }
+
+    // comment: %NOTE% ... to end of line
+    if (c === '%' && source.slice(i, i+6) === '%NOTE%') {
+      i += 6;
+      while (i < n && source[i] !== '\n') i++;
+      continue;
+    }
+
+    // string literal
+    if (c === '"') {
+      let start = i;
+      i++;
+      let buf = '';
+      while (i < n && source[i] !== '"') {
+        if (source[i] === '\n') line++;
+        buf += source[i];
+        i++;
+      }
+      if (source[i] !== '"') {
+        throw new GeNewError(`unterminated string starting`, line);
+      }
+      i++; // closing quote
+      tokens.push({ type: 'STRING', value: buf, line });
+      continue;
+    }
+
+    // number
+    if (isDigit(c)) {
+      let start = i;
+      while (i < n && isDigit(source[i])) i++;
+      if (source[i] === '.' && isDigit(source[i+1])) {
+        i++;
+        while (i < n && isDigit(source[i])) i++;
+      }
+      tokens.push({ type: 'NUMBER', value: parseFloat(source.slice(start, i)), line });
+      continue;
+    }
+
+    // identifier / keyword
+    if (isAlpha(c)) {
+      let start = i;
+      while (i < n && isAlnum(source[i])) i++;
+      let word = source.slice(start, i);
+      if (KEYWORDS.has(word)) {
+        tokens.push({ type: word, value: word, line });
+      } else {
+        tokens.push({ type: 'IDENT', value: word, line });
+      }
+      continue;
+    }
+
+    // multi-char / single-char symbols
+    const two = source.slice(i, i+2);
+    if (two === '>=' || two === '<=') {
+      tokens.push({ type: two, value: two, line });
+      i += 2;
+      continue;
+    }
+
+    if ('=+-*/()>,<[]'.includes(c)) {
+      tokens.push({ type: c, value: c, line });
+      i++;
+      continue;
+    }
+
+    throw new GeNewError(`unexpected character '${c}'`, line);
+  }
+
+  tokens.push({ type: 'EOF', value: null, line });
+  return tokens;
+}
+
+/* ---------------- ERRORS ---------------- */
+class GeNewError extends Error {
+  constructor(msg, line){
+    super(line ? `${msg} (line ${line})` : msg);
+    this.geline = line;
+  }
+}
+
+/* ---------------- PARSER ----------------
+   Grammar (informal):
+
+   program      := statement*
+   statement    := assign | when | for | define | write | call | stop
+   assign       := IDENT '=' expr
+   when         := 'when' condition 'do' block
+   condition    := andor
+   andor        := comparison (('AND'|'OR') comparison)*
+   comparison   := expr ('is'|'>'|'<'|'>='|'<=') expr
+   block        := (statement)* 'end'   OR   single statement (no 'end') on same logical line
+   for          := 'for' 'every' 'step' '(' expr ')' 'do' block
+   define       := 'define' IDENT '(' params? ')' 'do' block
+   write        := 'write' expr
+   call         := IDENT '(' args? ')'
+   stop         := 'stop'
+   expr         := term (('+'|'-') term)*
+   term         := factor (('*'|'/') factor)*
+   factor       := NUMBER | STRING | IDENT | call | '(' expr ')' | '-' factor
+------------------------------------------------- */
+
+function parse(tokens){
+  let pos = 0;
+
+  function peek(o=0){ return tokens[pos+o]; }
+  function cur(){ return tokens[pos]; }
+  function atEnd(){ return cur().type === 'EOF'; }
+  function check(type){ return cur().type === type; }
+  function advance(){ return tokens[pos++]; }
+  function expect(type, msg){
+    if (check(type)) return advance();
+    throw new GeNewError(`${msg || 'expected ' + type}, got '${cur().value ?? cur().type}'`, cur().line);
+  }
+
+  function parseProgram(){
+    const stmts = [];
+    while (!atEnd()) {
+      stmts.push(parseStatement());
+    }
+    return { type: 'Program', body: stmts };
+  }
+
+  // A block always terminates with 'end'. Used by when/for/define.
+  function parseBlockUntilEnd(){
+    const stmts = [];
+    while (!atEnd() && !check('end')) {
+      stmts.push(parseStatement());
+    }
+    expect('end', "expected 'end' to close block");
+    return stmts;
+  }
+
+  // Single-line inline form: `when <cond> do <one statement>` with no 'end'.
+  // We detect this by: after 'do', if the next statement is followed by EOF
+  // or another top-level construct at same nesting rather than 'end', we still
+  // try block-until-end first (more common/robust); inline form used only
+  // when explicitly just one simple statement then newline with nothing 'end'-like.
+  // For simplicity & predictability we REQUIRE 'end' for multi-statement blocks,
+  // but allow a single trailing statement with no 'end' if EOF follows directly.
+
+  function parseStatement(){
+    switch (cur().type) {
+      case 'when': return parseWhen();
+      case 'for': return parseFor();
+      case 'define': return parseDefine();
+      case 'write': return parseWrite();
+      case 'stop': { advance(); return { type: 'Stop', line: tokens[pos-1].line }; }
+      case 'return': {
+        const line = advance().line;
+        // 'return' with nothing after it (end/EOF) returns no value
+        if (check('end') || check('EOF')) return { type: 'Return', value: null, line };
+        const value = parseExpr();
+        return { type: 'Return', value, line };
+      }
+      case 'IDENT': {
+        // assignment, indexed-assignment, OR call-as-statement
+        if (peek(1) && peek(1).type === '=') {
+          return parseAssign();
+        }
+        if (peek(1) && peek(1).type === '[') {
+          return parseIndexAssign();
+        }
+        if (peek(1) && peek(1).type === '(') {
+          const callExpr = parseCallFrom();
+          return { type: 'ExprStatement', expr: callExpr };
+        }
+        throw new GeNewError(`unexpected identifier '${cur().value}'`, cur().line);
+      }
+      default:
+        throw new GeNewError(`unexpected token '${cur().value ?? cur().type}'`, cur().line);
+    }
+  }
+
+  function parseAssign(){
+    const nameTok = expect('IDENT');
+    expect('=');
+    const value = parseExpr();
+    return { type: 'Assign', name: nameTok.value, value, line: nameTok.line };
+  }
+
+  function parseIndexAssign(){
+    const nameTok = expect('IDENT');
+    expect('[');
+    const indexExpr = parseExpr();
+    expect(']');
+    expect('=');
+    const value = parseExpr();
+    return { type: 'IndexAssign', name: nameTok.value, index: indexExpr, value, line: nameTok.line };
+  }
+
+  function parseWhen(){
+    const line = expect('when').line;
+    const condition = parseCondition();
+    expect('do', "expected 'do' after when-condition");
+    const body = parseFlexibleBlock();
+    return { type: 'When', condition, body, line };
+  }
+
+  function parseFor(){
+    const line = expect('for').line;
+    expect('every');
+    expect('step');
+    expect('(');
+    const countExpr = parseExpr();
+    expect(')');
+    expect('do', "expected 'do' after for-every-step(...)");
+    const body = parseFlexibleBlock();
+    return { type: 'For', count: countExpr, body, line };
+  }
+
+  function parseDefine(){
+    const line = expect('define').line;
+    const nameTok = expect('IDENT', 'expected function name');
+    expect('(');
+    const params = [];
+    if (!check(')')) {
+      params.push(expect('IDENT').value);
+      while (check(',')) { advance(); params.push(expect('IDENT').value); }
+    }
+    expect(')');
+    expect('do', "expected 'do' after define(...)");
+    const body = parseFlexibleBlock();
+    return { type: 'Define', name: nameTok.value, params, body, line };
+  }
+
+  function parseWrite(){
+    const line = expect('write').line;
+    const value = parseExpr();
+    return { type: 'Write', value, line };
+  }
+
+  // A block is either:
+  //   ... do <singleStatement>            (no 'end', ends the block right there)
+  //   ... do <stmt> <stmt> ... end
+  // Heuristic: parse statements; if we hit 'end', consume it and stop.
+  // If instead we hit EOF or a token that can't start a statement inside
+  // this block AND we've parsed at least one statement, stop without 'end'
+  // (inline single-line form).
+  function parseFlexibleBlock(){
+    const stmts = [];
+    // try block form: gather until 'end' or until we can't parse further
+    while (true) {
+      if (check('end')) { advance(); return stmts; }
+      if (atEnd()) return stmts; // inline form, ran out of tokens
+      // Stop consuming into this block if the next statement plainly is
+      // a new top-level thing that isn't nested — but our grammar is
+      // whitespace-insensitive, so instead: parse exactly one statement,
+      // then peek — if next is 'end', loop will consume it above.
+      stmts.push(parseStatement());
+      // if next token starts a statement that keeps going at this level,
+      // and it's clearly meant to be part of THIS block (i.e. block had
+      // no 'end' yet), we keep looping — 'end' check happens at top.
+      // But for true inline single-statement form (no 'end' at all),
+      // we stop after one statement UNLESS an 'end' is coming.
+      if (!check('end')) {
+        // Look ahead: is there an 'end' anywhere reachable at this nesting
+        // before EOF/another block-closer? We keep it simple: only continue
+        // looping if the very next token can start a statement AND the
+        // author is clearly building a multi-line block (common case).
+        // To keep this robust for both styles, we just continue the loop;
+        // the 'end' check at the top will terminate it when reached.
+        continue;
+      }
+    }
+  }
+
+  function parseCondition(){
+    let left = parseComparison();
+    while (check('AND') || check('OR')) {
+      const opTok = advance();
+      const right = parseComparison();
+      left = { type: 'Logical', op: opTok.type, left, right };
+    }
+    return left;
+  }
+
+  function parseComparison(){
+    const left = parseExpr();
+    if (check('is') || check('>') || check('<') || check('>=') || check('<=')) {
+      const opTok = advance();
+      const right = parseExpr();
+      return { type: 'Compare', op: opTok.type, left, right };
+    }
+    return left; // bare truthy expression
+  }
+
+  function parseExpr(){
+    let node = parseTerm();
+    while (check('+') || check('-')) {
+      const opTok = advance();
+      const right = parseTerm();
+      node = { type: 'Binary', op: opTok.type, left: node, right };
+    }
+    return node;
+  }
+
+  function parseTerm(){
+    let node = parseFactor();
+    while (check('*') || check('/')) {
+      const opTok = advance();
+      const right = parseFactor();
+      node = { type: 'Binary', op: opTok.type, left: node, right };
+    }
+    return node;
+  }
+
+  function parseFactor(){
+    const t = cur();
+    if (t.type === 'NUMBER') { advance(); return { type: 'Number', value: t.value }; }
+    if (t.type === 'STRING') { advance(); return { type: 'String', value: t.value }; }
+    if (t.type === 'step')   { advance(); return maybeIndex({ type: 'Ident', name: 'step' }); }
+    if (t.type === '-') { advance(); return { type: 'Unary', op: '-', value: parseFactor() }; }
+    if (t.type === '[') {
+      advance();
+      const items = [];
+      if (!check(']')) {
+        items.push(parseExpr());
+        while (check(',')) { advance(); items.push(parseExpr()); }
+      }
+      expect(']');
+      return { type: 'ArrayLiteral', items };
+    }
+    if (t.type === '(') {
+      advance();
+      const e = parseExpr();
+      expect(')');
+      return maybeIndex(e);
+    }
+    if (t.type === 'IDENT') {
+      if (peek(1) && peek(1).type === '(') {
+        return maybeIndex(parseCallFrom());
+      }
+      advance();
+      return maybeIndex({ type: 'Ident', name: t.value });
+    }
+    throw new GeNewError(`unexpected token '${t.value ?? t.type}' in expression`, t.line);
+  }
+
+  // allows chained indexing: name[0], name[0][1], func()[0], etc.
+  function maybeIndex(node){
+    while (check('[')) {
+      advance();
+      const indexExpr = parseExpr();
+      expect(']');
+      node = { type: 'Index', target: node, index: indexExpr };
+    }
+    return node;
+  }
+
+  function parseCallFrom(){
+    const nameTok = expect('IDENT');
+    expect('(');
+    const args = [];
+    if (!check(')')) {
+      args.push(parseExpr());
+      while (check(',')) { advance(); args.push(parseExpr()); }
+    }
+    expect(')');
+    return { type: 'Call', name: nameTok.value, args, line: nameTok.line };
+  }
+
+  return parseProgram();
+}
+
+/* ---------------- INTERPRETER ---------------- */
+
+class StopLoop {}
+class ReturnSignal { constructor(value){ this.value = value; } }
+
+function interpret(ast, writeFn){
+  const globals = new Map();
+  const functions = new Map();
+
+  function truthy(v){
+    if (typeof v === 'number') return v !== 0;
+    if (typeof v === 'string') return v.length > 0;
+    return !!v;
+  }
+
+  function toDisplay(v){
+    if (Array.isArray(v)) return '[' + v.map(toDisplay).join(', ') + ']';
+    if (typeof v === 'number') {
+      return Number.isInteger(v) ? String(v) : String(v);
+    }
+    return String(v);
+  }
+
+  function evalExpr(node, scope){
+    switch (node.type) {
+      case 'Number': return node.value;
+      case 'String': return node.value;
+      case 'Ident': {
+        if (scope.has(node.name)) return scope.get(node.name);
+        if (globals.has(node.name)) return globals.get(node.name);
+        throw new GeNewError(`'${node.name}' is not defined`);
+      }
+      case 'Unary': {
+        const v = evalExpr(node.value, scope);
+        if (node.op === '-') return -v;
+        break;
+      }
+      case 'Binary': {
+        const l = evalExpr(node.left, scope);
+        const r = evalExpr(node.right, scope);
+        switch (node.op) {
+          case '+':
+            if (typeof l === 'string' || typeof r === 'string') return toDisplay(l) + toDisplay(r);
+            return l + r;
+          case '-': return l - r;
+          case '*': return l * r;
+          case '/': return l / r;
+        }
+        break;
+      }
+      case 'Compare': {
+        const l = evalExpr(node.left, scope);
+        const r = evalExpr(node.right, scope);
+        switch (node.op) {
+          case 'is': return l === r;
+          case '>': return l > r;
+          case '<': return l < r;
+          case '>=': return l >= r;
+          case '<=': return l <= r;
+        }
+        break;
+      }
+      case 'Logical': {
+        const l = evalExpr(node.left, scope);
+        if (node.op === 'AND') return truthy(l) ? evalExpr(node.right, scope) : false;
+        if (node.op === 'OR')  return truthy(l) ? true : evalExpr(node.right, scope);
+        break;
+      }
+      case 'ArrayLiteral': {
+        return node.items.map(item => evalExpr(item, scope));
+      }
+      case 'Index': {
+        const target = evalExpr(node.target, scope);
+        const idx = evalExpr(node.index, scope);
+        if (!Array.isArray(target)) throw new GeNewError(`cannot index a non-array value`);
+        if (idx < 0 || idx >= target.length) throw new GeNewError(`index ${idx} out of range (length ${target.length})`);
+        return target[idx];
+      }
+      case 'Call': {
+        const argValues = node.args.map(a => evalExpr(a, scope));
+        const builtin = BUILTINS[node.name];
+        if (builtin) return builtin(argValues, node.line);
+        return callFunction(node.name, argValues, node.line);
+      }
+      default:
+        throw new GeNewError(`cannot evaluate node '${node.type}'`);
+    }
+  }
+
+  const BUILTINS = {
+    length: (args, line) => {
+      const v = args[0];
+      if (Array.isArray(v) || typeof v === 'string') return v.length;
+      throw new GeNewError(`length() needs an array or string`, line);
+    },
+    push: (args, line) => {
+      const [arr, val] = args;
+      if (!Array.isArray(arr)) throw new GeNewError(`push() needs an array`, line);
+      arr.push(val);
+      return arr.length;
+    },
+    pop: (args, line) => {
+      const [arr] = args;
+      if (!Array.isArray(arr)) throw new GeNewError(`pop() needs an array`, line);
+      if (arr.length === 0) throw new GeNewError(`pop() on empty array`, line);
+      return arr.pop();
+    }
+  };
+
+  function callFunction(name, argValues, line){
+    if (!functions.has(name)) {
+      throw new GeNewError(`function '${name}' is not defined`, line);
+    }
+    const fn = functions.get(name);
+    const scope = new Map();
+    fn.params.forEach((p, idx) => scope.set(p, argValues[idx]));
+    try {
+      execBlock(fn.body, scope);
+    } catch (sig) {
+      if (sig instanceof ReturnSignal) return sig.value;
+      throw sig;
+    }
+    return undefined;
+  }
+
+  function execBlock(stmts, scope){
+    for (const stmt of stmts) execStatement(stmt, scope);
+  }
+
+  function execStatement(node, scope){
+    switch (node.type) {
+      case 'Assign': {
+        const v = evalExpr(node.value, scope);
+        if (scope.has(node.name)) scope.set(node.name, v);
+        else globals.set(node.name, v);
+        return;
+      }
+      case 'When': {
+        const cond = evalExpr(node.condition, scope);
+        if (truthy(cond)) execBlock(node.body, scope);
+        return;
+      }
+      case 'For': {
+        const count = evalExpr(node.count, scope);
+        for (let i = 1; i <= count; i++) {
+          scope.set('step', i);
+          try {
+            execBlock(node.body, scope);
+          } catch (sig) {
+            if (sig instanceof StopLoop) break;
+            throw sig;
+          }
+        }
+        return;
+      }
+      case 'Define': {
+        functions.set(node.name, { params: node.params, body: node.body });
+        return;
+      }
+      case 'Write': {
+        const v = evalExpr(node.value, scope);
+        writeFn(toDisplay(v));
+        return;
+      }
+      case 'Stop': {
+        throw new StopLoop();
+      }
+      case 'Return': {
+        throw new ReturnSignal(node.value ? evalExpr(node.value, scope) : undefined);
+      }
+      case 'IndexAssign': {
+        const target = scope.has(node.name) ? scope.get(node.name) : globals.get(node.name);
+        if (!Array.isArray(target)) throw new GeNewError(`'${node.name}' is not an array`, node.line);
+        const idx = evalExpr(node.index, scope);
+        target[idx] = evalExpr(node.value, scope);
+        return;
+      }
+      case 'ExprStatement': {
+        evalExpr(node.expr, scope);
+        return;
+      }
+      default:
+        throw new GeNewError(`cannot execute node '${node.type}'`);
+    }
+  }
+
+  const rootScope = new Map();
+  execBlock(ast.body, rootScope);
+}
+
+/* ---------------- RUNNER / UI GLUE ---------------- */
+
+const editor = document.getElementById('editor');
+const consoleEl = document.getElementById('console');
+const fname = document.getElementById('fname');
+
+const DEFAULT_SOURCE =
+`%NOTE% welcome to GeNew — edit me, then hit run
+x = 0
+nums = [10, 20, 30]
+
+define greet(name) do
+    write "hello, "
+    write name
+end
+
+define double(n) do
+    return n * 2
+end
+
+for every step(5) do
+    x = x + step
+    when step is 3 do
+        write "halfway there"
+    end
+end
+
+write "sum is"
+write x
+
+nums[0] = 99
+push(nums, 40)
+write nums
+write length(nums)
+
+write "doubled:"
+write double(21)
+
+greet("Bob")
+`;
+
+editor.value = DEFAULT_SOURCE;
+
+function logLine(text, cls){
+  const div = document.createElement('div');
+  div.className = 'line ' + (cls || 'out');
+  div.textContent = text;
+  consoleEl.appendChild(div);
+  consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+function runCode(){
+  consoleEl.innerHTML = '';
+  const src = editor.value;
+  try {
+    const tokens = lex(src);
+    const ast = parse(tokens);
+    interpret(ast, (text) => logLine(text, 'out'));
+    logLine('— done —', 'sys');
+  } catch (e) {
+    if (e instanceof GeNewError) {
+      logLine('error: ' + e.message, 'err');
+    } else {
+      logLine('internal error: ' + e.message, 'err');
+      console.error(e);
+    }
+  }
+}
+
+document.getElementById('runBtn').addEventListener('click', runCode);
+document.getElementById('clearBtn').addEventListener('click', () => { consoleEl.innerHTML = ''; });
+
+document.getElementById('saveBtn').addEventListener('click', () => {
+  const blob = new Blob([editor.value], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (fname.textContent || 'untitled.gnw');
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+const fileInput = document.getElementById('fileInput');
+document.getElementById('loadBtn').addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    editor.value = reader.result;
+    fname.textContent = file.name;
+    consoleEl.innerHTML = '';
+    logLine('loaded ' + file.name, 'sys');
+  };
+  reader.readAsText(file);
+});
+
+// keyboard shortcut: ctrl/cmd + enter to run
+editor.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    runCode();
+  }
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const s = editor.selectionStart, en = editor.selectionEnd;
+    editor.value = editor.value.slice(0, s) + '    ' + editor.value.slice(en);
+    editor.selectionStart = editor.selectionEnd = s + 4;
+  }
+});
+
+// initial run on load
+runCode();
+
+/* ---------------- PWA: manifest + install prompt + offline cache ---------------- */
+(function setupPWA(){
+  const iconSVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2312130f'/%3E%3Ctext x='50' y='68' font-size='58' font-family='monospace' font-weight='700' fill='%23c4f000' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E";
+
+  const manifest = {
+    name: "GeNew",
+    short_name: "GeNew",
+    description: "A tiny language for people who say \"when\" instead of \"if\".",
+    start_url: ".",
+    display: "standalone",
+    background_color: "#12130f",
+    theme_color: "#12130f",
+    icons: [
+      { src: iconSVG, sizes: "any", type: "image/svg+xml" }
+    ]
+  };
+  try {
+    const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+    const manifestURL = URL.createObjectURL(manifestBlob);
+    document.getElementById('manifestLink').setAttribute('href', manifestURL);
+  } catch (err) {
+    console.warn('manifest setup failed', err);
+  }
+
+  // Offline caching via a service worker built from this page's own HTML.
+  // Best-effort: some browsers restrict blob: service worker scripts, so this
+  // is wrapped defensively and simply won't offer offline support if blocked.
+  if ('serviceWorker' in navigator) {
+    const swSource = `
+      const CACHE = 'genew-v1';
+      self.addEventListener('install', (e) => {
+        self.skipWaiting();
+      });
+      self.addEventListener('activate', (e) => {
+        self.clients.claim();
+      });
+      self.addEventListener('fetch', (e) => {
+        e.respondWith(
+          caches.open(CACHE).then(async (cache) => {
+            const cached = await cache.match(e.request);
+            if (cached) return cached;
+            try {
+              const resp = await fetch(e.request);
+              if (e.request.method === 'GET' && resp.ok) cache.put(e.request, resp.clone());
+              return resp;
+            } catch (err) {
+              return cached || Response.error();
+            }
+          })
+        );
+      });
+    `;
+    try {
+      const swBlob = new Blob([swSource], { type: 'application/javascript' });
+      const swURL = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swURL).catch(() => {
+        // registration blocked in this environment — silently skip, app still works
+      });
+    } catch (err) {
+      // no offline cache available here; app still runs fine online
+    }
+  }
+
+  // Desktop/Chrome install prompt
+  let deferredPrompt = null;
+  const installBtn = document.getElementById('installBtn');
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'inline-block';
+  });
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.style.display = 'none';
+  });
+  window.addEventListener('appinstalled', () => {
+    installBtn.style.display = 'none';
+  });
+})();
+</script>
+</body>
+</html>
